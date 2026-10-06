@@ -1,0 +1,39 @@
+name: Build Swadhin Broadband WiFi APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and extract project ZIP
+        run: |
+          mkdir app_project
+          unzip -q *.zip -d app_project
+
+      - name: Find Gradle project
+        run: |
+          if [ -f app_project/gradlew ]; then
+            echo "PROJECT_DIR=app_project" >> $GITHUB_ENV
+          else
+            DIR=$(find app_project -name gradlew -type f -print -quit | xargs dirname)
+            echo "PROJECT_DIR=$DIR" >> $GITHUB_ENV
+          fi
+
+      - name: Make Gradle executable
+        run: chmod +x "$PROJECT_DIR/gradlew"
+
+      - name: Build APK
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Swadhin-Broadband-WiFi-APK
+          path: "**/build/outputs/apk/**/*.apk"
